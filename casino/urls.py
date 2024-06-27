@@ -17,7 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from servicio import views
-from servicio import ticket
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
@@ -33,7 +32,6 @@ urlpatterns = [
     path('principal/programarmenu/', views.programarmenu, name='programarmenu'),
     path('principal/programarmenu_emp/', views.programarmenu, name='programarmenu_emp'),
     path('guardar_selecciones/', views.guardar_selecciones, name='guardar_selecciones'),
-    path('ticket/<int:usuario_id>/<str:fecha>/', ticket.generar_ticket, name='generar_ticket'),
     
     #VISTA MENU SOPORTE - CASINO
     path('menu_lista/', views.menu_lista, name='menu_lista'),

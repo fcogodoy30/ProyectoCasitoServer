@@ -10,34 +10,37 @@
 
 <h3 class="titu">Programa tu Menu de la semana Siguiente</h3>
 <br>
-<div class="row">
-    {% for fecha, opciones in programacion_ordenada %}
-    <div class="col-md-2 mx-auto">
-        <div class="block" id="block-{{ fecha|date:"Y-m-d" }}">
-            <center>
-                <h5>{{ fecha|date:"l" }}</h5>
-                <h5>{{ fecha|date:"d-m-Y" }}</h5>
-            </center>
-            <div class="options">
-                {% for opcion in opciones %}
-                <button type="button" class="button" onclick="selectOption(this)" value="{{ opcion.id }}" data-fecha="{{ fecha|date:"Y-m-d" }}">
-                    <h5>{{ opcion.titulo }}</h5>
-                    <input type="hidden" name="nom_menu" id="nom_menu" value="{{ opcion.titulo }}" class="nom_menu">
-                    <p>{{ opcion.descripcion }}</p>
-                </button>
-                {% endfor %}
+<div class="container">
+    <div class="row justify-content-center">
+        {% for fecha, opciones in programacion_ordenada %}
+        <div class="col-md-4 d-flex justify-content-center mb-4">
+            <div class="block" id="block-{{ fecha|date:"Y-m-d" }}">
                 <center>
-                    <div class="has-addons">
-                        <button type="button" onclick="decrement('quantity-{{ fecha|date:"Y-m-d" }}-{{ opcion.id }}')">-</button>
-                        <input type="text" name="cant" id="quantity-{{ fecha|date:"Y-m-d" }}-{{ opcion.id }}" value="1" class="cant">
-                        <button type="button" onclick="increment('quantity-{{ fecha|date:"Y-m-d" }}-{{ opcion.id }}')">+</button>
-                    </div>
+                    <h5>{{ fecha|date:"l" }}</h5>
+                    <h5>{{ fecha|date:"d-m-Y" }}</h5>
                 </center>
+                <div class="options">
+                    {% for opcion in opciones %}
+                    <button type="button" class="button" onclick="selectOption(this)" value="{{ opcion.id }}" data-fecha="{{ fecha|date:"Y-m-d" }}">
+                        <h5>{{ opcion.titulo }}</h5>
+                        <input type="hidden" name="nom_menu" id="nom_menu" value="{{ opcion.titulo }}" class="nom_menu">
+                        <p>{{ opcion.descripcion }}</p>
+                    </button>
+                    {% endfor %}
+                    <center>
+                        <div class="has-addons">
+                            <button type="button" onclick="decrement('quantity-{{ fecha|date:"Y-m-d" }}-{{ opcion.id }}')">-</button>
+                            <input type="text" name="cant" id="quantity-{{ fecha|date:"Y-m-d" }}-{{ opcion.id }}" value="1" class="cant">
+                            <button type="button" onclick="increment('quantity-{{ fecha|date:"Y-m-d" }}-{{ opcion.id }}')">+</button>
+                        </div>
+                    </center>
+                </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
+
 
 <div class="row justify-content-center">
     <div class="col-md-4 d-flex justify-content-center">

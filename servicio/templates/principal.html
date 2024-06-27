@@ -18,13 +18,7 @@
         <span style="color: black;"><strong class="literal">PROGRAMAR MENU</strong></span>
       </button>
     </a>
-      <!-- Botón Imprime Ticket -->
-      <a href="{% url 'generar_ticket' usuario_id=user.usuarios.id fecha=current_date|date:'Y-m-d' %}">
-        <button type="button" class="btn btn-outline-primary mx-2" style="border-color: black;">
-            <img src="{% static 'img/comer.png' %}" alt="Comer" style="width: 150px; height: 150px;"><br>
-            <span style="color: black;"><strong class="literal">COMER</strong></span>
-        </button>
-    </a>
+   
     <br><br>
 
     <!--MENSAJE PARA CUANDO SE GUARDE SE ENVIA POR JS-->

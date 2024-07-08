@@ -48,7 +48,7 @@ function resetTimeout() {
     timeout = setTimeout(function() {
         // Realizar alguna acción cuando el usuario esté inactivo, por ejemplo, redirigir
         window.location.href = '/cerrarsession/';  // Redirigir a la página de logout o login
-    }, 180000);  // 15 minutos en milisegundos (900000)
+    }, 120000);  // 15 minutos en milisegundos (900000)
 }
 
 // Llama a resetTimeout() cuando hay actividad relevante (click, tecla presionada, etc.)

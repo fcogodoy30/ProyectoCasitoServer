@@ -1,0 +1,23 @@
+/* Añade este CSS a tu archivo de estilos */
+.form-inline .form-group {
+    margin-bottom: 0;
+}
+
+.form-inline .form-control {
+    width: auto;
+    display: inline-block;
+}
+
+.form-inline button {
+    margin-top: 0;
+}
+
+
+
+
+.date-filter-label {
+    font-size: 1.5em;  /* Ajusta el tamaño según tus necesidades */
+    font-weight: bold;  /* Opcional: para hacer el texto más destacado */
+    color: #333;  /* Opcional: para cambiar el color del texto */
+    margin-bottom: 10px;  /* Espacio adicional debajo de la etiqueta */
+}

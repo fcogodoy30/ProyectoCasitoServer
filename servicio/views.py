@@ -14,12 +14,30 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import json
+import pytz
 
 
 #login
 def home(request):
     return render(request,'login/login.html')
 
+@login_required
+def primeringreso(request):
+    if request.method == 'GET':
+        return render(request,'primeringreso.html')
+    else:
+        id_user = request.POST.get('id_user')
+        password = request.POST.get('password1')
+        usuario = get_object_or_404(User, id=id_user)
+        if password:
+            usuario.set_password(password)  # Actualizamos el Password
+        usuario.save()
+        logout(request)
+        request.session.flush()
+        return render(request,'login/login.html',{
+                          'msg': 'Contraseña actualizada, ingrese nuevamente '})
+        
+  
 # PRINCIPAL
 @login_required
 def principal(request):
@@ -49,14 +67,24 @@ def iniciosession(request):
         else:
             activo = Usuarios.objects.filter(rut = request.POST['username'], activo = 1)
             if activo:
-                login(request, user)
-                request.session['user_data'] = {
-                    'id' : user.id,
-                    'username': user.username,
-                    'nombre': user.first_name,
-                    'apellido': user.last_name
-                }
-                return redirect('principal')
+                ulticonex = user.last_login
+            
+                if ulticonex is not None:
+                    login(request, user)
+                           
+                    request.session['user_data'] = {
+                        'id' : user.id,
+                        'username': user.username,
+                        'nombre': user.first_name,
+                        'apellido': user.last_name,
+                        
+                    }
+                    return redirect('principal')
+                else:
+                    login(request, user)
+                    return render(request, 'primeringreso.html', {
+                        'id': user.id
+                    })
             else:
                 return render(request,'login/login.html',{
                           'error': 'Rut Inactivo'})
@@ -155,14 +183,14 @@ def usuarioslistas(request):
         # Guardamos el Perfil que esta solicitando el dato
     usuario_actual = Usuarios.objects.get(id_user=request.user)
     tipo_usuario_actual = usuario_actual.tipo_usuario
-        
+    
     if tipo_usuario_actual.tipo == 'Soporte':
         usuarios = Usuarios.objects.all().order_by('tipo_usuario')
         tipousuario = TipoUsuario.objects.all().order_by('id')
     else:
-        usuarios = Usuarios.objects.all().order_by('tipo_usuario')
+        usuarios = Usuarios.objects.filter(tipo_usuario__in=[1, 2]).order_by('tipo_usuario')
         tipousuario = TipoUsuario.objects.filter(id__in=[1, 2]).order_by('id')
-                
+             
     context = {
         'usuarios': usuarios,
         #'query': consulta, #Resultado para buscador comentado
@@ -287,7 +315,6 @@ def cambiar_estado_menu(request):
     if request.method == 'POST':   
         id = request.POST.get('menu_Id')
         estado = request.POST.get('activo')
-        print("estado ",estado )
         menu = CasinoColacion.objects.get(id=id)
         menu.id_estado = estado
         menu.save()
@@ -338,19 +365,13 @@ def programarmenu(request):
         programacion_dict = defaultdict(list)
         for registro in programacion:
             programacion_dict[registro.fecha_servicio].append(registro)
-        
         # Ordenar la programación por fecha
         programacion_ordenada = sorted(programacion_dict.items())
-        
         TipoUsuario = Usuarios.objects.get(id_user=user_id)
-        print(TipoUsuario.tipo_usuario_id)
-
         
         if TipoUsuario.tipo_usuario_id == 1:
-            print("Empresa", TipoUsuario.tipo_usuario)
             return render(request, 'usuario/programarmenu_emp.html', {'programacion_ordenada': programacion_ordenada})
         else:
-            print("Usuario", TipoUsuario.tipo_usuario)
             return render(request, 'usuario/programarmenu.html', {'programacion_ordenada': programacion_ordenada})
 
 @csrf_exempt  # Desactiva la verificación CSRF para facilitar el desarrollo
@@ -364,14 +385,17 @@ def guardar_selecciones(request):
             cantidad = item['cant']
             nom_menu = item['nom_menu']
             
-            print ("cantidad: " + cantidad)
-            
+            now = timezone.now()
+            santiago_tz = pytz.timezone('America/Santiago')
+            now_santiago = now.astimezone(santiago_tz)
+           
             Programacion.objects.create(
                 usuario=usuario,
                 menu_id=casino_colacion.id,
                 nom_menu=nom_menu,
                 fecha_servicio=fecha_servicio,
                 cantidad_almuerzo=cantidad,
+                fecha_seleccion=now_santiago,
                 impreso=0
             )
         
@@ -382,3 +406,79 @@ def guardar_selecciones(request):
 
 def control_descarga(request):
     return render(request, 'admin/control_descarga.html')
+
+
+from django_filters.views import FilterView
+from django_tables2.views import SingleTableMixin
+from .models import Programacion
+from .filters import ProgramacionFilter
+from .tables import ProgramacionTable
+from io import BytesIO
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+
+
+class ProgramacionListView(SingleTableMixin, FilterView):
+    model = Programacion
+    table_class = ProgramacionTable
+    template_name = 'admin/control_descarga.html'
+    filterset_class = ProgramacionFilter
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = ProgramacionFilter(self.request.GET, queryset=self.get_queryset())
+        return context
+
+def export_pdf(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="programacion.pdf"'
+
+    # Aplicar los mismos filtros de la vista ProgramacionListView
+    filter = ProgramacionFilter(request.GET, queryset=Programacion.objects.all())
+    programaciones = filter.qs
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title = Paragraph("Programacion Menu Usuarios", styles['Title'])
+    elements.append(title)
+
+    data = [
+        ['Usuario', 'Nombre Menu', 'Fecha Servicio', 'Cantidad Almuerzo', 'Impreso', 'Fecha Impreso', 'Fecha Selección']
+    ]
+
+    for prog in programaciones:
+        data.append([
+            str(prog.usuario),
+            prog.nom_menu,
+            prog.fecha_servicio.strftime('%Y-%m-%d'),
+            prog.cantidad_almuerzo,
+            'Sí' if prog.impreso else 'No',
+            prog.fecha_impreso.strftime('%Y-%m-%d %H:%M') if prog.fecha_impreso else '',
+            prog.fecha_seleccion.strftime('%Y-%m-%d %H:%M') if prog.fecha_seleccion else '',
+        ])
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response

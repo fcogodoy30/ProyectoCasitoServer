@@ -5,10 +5,29 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}" />
 
+<style>
+
+    /* Estilos básicos para el spinner */
+.spinner {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} 
+</style>
+
 <div class="row g-0 text">
     <div class="col-md-4 p-2" style="background-color: #C2C2C2;">
         <div class="container">
-            <form action="{% url 'editarMenu' id_menu %}" method="POST">
+            <form id = "Form"  name = "Form" action="{% url 'editarMenu' id_menu %}" method="POST">
                 {% csrf_token %}
                 <center><h4 class="py-2" style="color:white">EDITAR MENU</h4></center> 
                 <input type="hidden" name="id_menu" value="{{ id_menu }}">
@@ -26,8 +45,9 @@
                             <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="" value = "">{{ menu.descripcion }}</textarea>
                         </div>
                             
-                        <center><button type="submit" class="btn btn-primary bg-warning">Actualizar</button><br><br>
-                        <a href="{% url 'agregarmenu' %}" > <h5>Cancelar</h5></a> </a></center>
+                        <center><button type="submit" id = "guardar" class="btn btn-primary bg-warning">Actualizar</button><br><br>
+                        <div id = "cance" name = "cance" ><a href="{% url 'agregarmenu' %}" > <h5>Cancelar</h5></a> </div></center>
+                        <center><div id="spinner" class="spinner"></div></center>
                 {% endfor %}
                 {% if messages %}
                 <div class="alert alert-info" role="alert">

@@ -48,16 +48,18 @@
 <div class="row justify-content-center">
     <div class="col-md-4 d-flex justify-content-center">
         <button name="brnEnviar" type="button" class="btn btn-success btn-lg" onclick="validateSelection()">Guardar</button>
-        <div class="spinner-border visually-hidden" role="status"></div>
+        <center><div id="spinner" name="spinner" class="spinner"></div></center>
     </div>
 </div>
 
 <br>
 <center>
-    <a href="{% url 'principal' %}"><img src="{% static 'img/volver.png' %}" alt="Editar" title="Editar" width="30" height="30"></a>
-    <h5>Volver</h5>
+    <div id="img" name="img">
+        <a href="{% url 'principal' %}"><img src="{% static 'img/volver.png' %}" alt="Editar" title="Editar" width="30" height="30">
+        </a>
+        <h5>Volver</h5>
+    </div>
 </center>
-
 
 <!-- Scripts de Bootstrap y jQuery -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

@@ -5,10 +5,31 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}" />
 
+
+<style>
+
+    /* Estilos básicos para el spinner */
+.spinner {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} 
+</style>
+
+
 <div class="row g-0 text">
     <div class="col-md-4 p-2" style="background-color: #C2C2C2;">
         <div class="container">
-            <form action='/agregarmenu/' method="POST">
+            <form id="Form_a"  name="Form_a"  method="POST"  action='/agregarmenu/' >
                 {% csrf_token %}
                 <center><h4 class="py-2" style="color:white">GESTION DE MENU</h4></center> 
                 <div class="mb-3">
@@ -50,7 +71,13 @@
                 <label for="txtDescripcion" class="form-label" style="color:white">Descripcion</label>
                 <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="2 agregados, papas fritas, arroz, etc"></textarea>
             </div>
-                <center><button type="submit" class="btn btn-primary bg-warning">Guardar</button></center>
+                
+                <center>
+                    <button type="submit" id = "guardar" class="btn btn-primary bg-warning">Guardar</button>
+                    <div id="spinner" class="spinner"></div>
+                </center>
+                
+                
             <br>
             </form>
 
@@ -124,6 +151,18 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 
+<script>
+
+    
+  document.getElementById('Form_a').addEventListener('submit', function(event) {
+    var Button = document.getElementById('guardar');
+    var spinner = document.getElementById('spinner');
+  
+    Button.style.display = 'none';
+    spinner.style.display = 'block';
+  });
+
+</script>
 
 <script src="{% static 'js/agregarmenu.js' %}"></script>
 {% endblock %}

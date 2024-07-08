@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from servicio import views
+from servicio import ticket
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
@@ -27,11 +28,14 @@ urlpatterns = [
     path('principal/', views.principal, name='principal'),
     path('cerrarsession/', views.cerrarsession, name = 'cerrarsession'),
     path('iniciosession/', views.iniciosession, name = 'iniciosession'),
+    path('primeringreso/', views.primeringreso, name = 'primeringreso'),
+    
     
     #URL PRINCIPAL
     path('principal/programarmenu/', views.programarmenu, name='programarmenu'),
     path('principal/programarmenu_emp/', views.programarmenu, name='programarmenu_emp'),
     path('guardar_selecciones/', views.guardar_selecciones, name='guardar_selecciones'),
+    path('ticket/<int:usuario_id>/<str:fecha>/', ticket.generar_ticket, name='generar_ticket'),
     
     #VISTA MENU SOPORTE - CASINO
     path('menu_lista/', views.menu_lista, name='menu_lista'),
@@ -39,7 +43,7 @@ urlpatterns = [
     path('edit_agregarmenu/<int:id>/', views.editamenu, name='editarMenu'),
     path('cambiar_estado_menu/', views.cambiar_estado_menu, name='cambiar_estado_usuario'),
     path('eliminar_menu/<int:id>/', views.eliminarMenu, name='eliminarMenu'),
-    path('control_descarga/', views.control_descarga, name='control_descarga'),
+    #path('control_descarga/', views.control_descarga, name='control_descarga'),
     
     #URL USUARIOS SOPORTE - EMPRESA
     path('usuarioslistas/', views.usuarioslistas, name='usuarioslistas'),
@@ -47,6 +51,9 @@ urlpatterns = [
     path('adminCliente/usuarios/', views.usuarios, name = 'usuarios'),
     path('adminCliente/edit_usuarios/<int:id>/', views.editusuario, name = 'editusuario'),
     
+    
+    path('control_descarga/', views.ProgramacionListView.as_view(), name='control_descarga'),
+    path('control_descarga/export/pdf/', views.export_pdf, name='export_pdf'),
      
      
      

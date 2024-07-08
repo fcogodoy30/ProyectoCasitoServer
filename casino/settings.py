@@ -2,34 +2,30 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+
+
+
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SESSION_INACTIVITY_TIMEOUT = 400  # 900 segundos = 15 minutos
+SESSION_INACTIVITY_TIMEOUT = 90  # 900 segundos = 15 minutos
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-o=ag8kv2w6evj2d3s)^7=61z%(#tltz4!qpe3w%(%0=l7)35qk')
 
 
-# Configurar la base de datos usando variables de entorno
+
+# Configurar las bases de datos
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MASTER_DB_NAME'),
-        'USER': os.getenv('MASTER_DB_USER'),
-        'PASSWORD': os.getenv('MASTER_DB_PASSWORD'),
-        'HOST': os.getenv('MASTER_DB_HOST'),
-        'PORT': '3306',
-    },
-    'local': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('LOCAL_DB_NAME'),
-        'USER': os.getenv('LOCAL_DB_USER'),
-        'PASSWORD': os.getenv('LOCAL_DB_PASSWORD'),
-        'HOST': os.getenv('LOCAL_DB_HOST'),
+        'NAME': os.getenv('NUBE_DB_NAME'),
+        'USER': os.getenv('NUBE_DB_USER'),
+        'PASSWORD': os.getenv('NUBE_DB_PASSWORD'),
+        'HOST': os.getenv('NUBE_DB_HOST'),
         'PORT': '3306',
     }
 }
@@ -50,7 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'servicio',
+    'django_filters',
+    'django_tables2',
+    'crispy_forms',
+    'crispy_bootstrap4',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -121,6 +123,7 @@ TIME_ZONE = 'America/Santiago'  # Establece la zona horaria correcta
 USE_I18N = True
 
 USE_TZ = True
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

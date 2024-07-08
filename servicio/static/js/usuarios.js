@@ -45,9 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
   var password1Input = document.getElementById('id_password1');
   var password2Input = document.getElementById('id_password2');
@@ -77,4 +74,14 @@ document.addEventListener('DOMContentLoaded', function() {
           mensajeError.textContent = '';
       }
   });
+});
+
+document.getElementById('Form').addEventListener('submit', function(event) {
+  var Button = document.getElementById('guardar');
+  var spinner = document.getElementById('spinner');
+  var cance = document.getElementById('cance');
+
+  Button.style.display = 'none';
+  cance.style.display = 'none';
+  spinner.style.display = 'block';
 });

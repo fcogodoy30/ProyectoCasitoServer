@@ -21,3 +21,33 @@
     color: #333;  /* Opcional: para cambiar el color del texto */
     margin-bottom: 10px;  /* Espacio adicional debajo de la etiqueta */
 }
+
+
+
+/* control.css */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.pagination li {
+    display: inline;
+    margin: 0 5px;
+}
+
+.pagination li a {
+    color: #007bff; /* Cambia esto al color que desees */
+    text-decoration: none;
+}
+
+.pagination li a:hover {
+    color: #0056b3; /* Cambia esto al color que desees */
+}
+
+.pagination li.active a {
+    color: #000000; /* Cambia esto al color que desees */
+    background-color: #007bff; /* Cambia esto al color que desees */
+    border-radius: 50%;
+    padding: 5px 10px;
+}

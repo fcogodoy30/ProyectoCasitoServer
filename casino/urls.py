@@ -19,7 +19,7 @@ from django.urls import path
 from servicio import views
 from servicio import ticket
 from django.urls import path
-from django.contrib.auth import views as auth_views
+
 
 
 urlpatterns = [
@@ -53,7 +53,8 @@ urlpatterns = [
     
     
     path('control_descarga/', views.ProgramacionListView.as_view(), name='control_descarga'),
-    path('control_descarga/export/pdf/', views.export_pdf, name='export_pdf'),
+    #path('control_descarga/export/pdf/', views.export_pdf, name='export_pdf'),
+    path('export_excel/', views.export_excel, name='export_excel'),
      
      
      

@@ -71,7 +71,7 @@ class Programacion(models.Model):
     impreso = models.BooleanField(default=False)
     fecha_impreso = models.DateTimeField(null=True, blank=True)
     fecha_seleccion = models.DateTimeField(null=True, blank=True)
-    _syncing = models.BooleanField(default=False) # Campo de control para evitar la recursión Sincronizacion Base de datos
+    _syncing = models.IntegerField() # Campo de control para evitar la recursión Sincronizacion Base de datos
     origen = models.CharField(max_length=10, default='nube')
    
 

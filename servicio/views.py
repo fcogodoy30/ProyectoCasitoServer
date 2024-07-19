@@ -17,6 +17,8 @@ import json
 import pytz
 
 
+
+
 #login
 def home(request):
     return render(request,'login/login.html')
@@ -359,7 +361,7 @@ def programarmenu(request):
         # Si no hay fechas activas, continúa con la lógica normal
         
         # Obtener la programación de CasinoColacion para la semana
-        programacion = CasinoColacion.objects.filter(fecha_servicio__range=[iniSem, finSem], id_estado=1)
+        programacion = CasinoColacion.objects.filter(fecha_servicio__range=[iniSem, finSem], id_estado=1).order_by('fecha_servicio', 'id_opciones_id')
         
         # Agrupar por fecha
         programacion_dict = defaultdict(list)
@@ -383,8 +385,7 @@ def guardar_selecciones(request):
             fecha_servicio = datetime.strptime(item['fecha_servicio'], '%Y-%m-%d').date()
             casino_colacion = CasinoColacion.objects.get(id=item['opcion_id'])
             cantidad = item['cant']
-            nom_menu = item['nom_menu']
-            
+                
             now = timezone.now()
             santiago_tz = pytz.timezone('America/Santiago')
             now_santiago = now.astimezone(santiago_tz)
@@ -392,13 +393,15 @@ def guardar_selecciones(request):
             Programacion.objects.create(
                 usuario=usuario,
                 menu_id=casino_colacion.id,
-                nom_menu=nom_menu,
+                nom_menu=casino_colacion,
                 fecha_servicio=fecha_servicio,
                 cantidad_almuerzo=cantidad,
                 fecha_seleccion=now_santiago,
-                impreso=0
+                impreso=0,
+                _syncing = casino_colacion.id_opciones.id
             )
-        
+            
+            
         return JsonResponse({ 'status': 'success' })  # Redirige a la página principal
     return JsonResponse({'status': 'fail'}, status=400)
 
@@ -414,10 +417,11 @@ from .models import Programacion
 from .filters import ProgramacionFilter
 from .tables import ProgramacionTable
 from io import BytesIO
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+import openpyxl  # Añadir esta línea para importar openpyxl
+from openpyxl.utils import get_column_letter 
+
 
 
 class ProgramacionListView(SingleTableMixin, FilterView):
@@ -431,54 +435,66 @@ class ProgramacionListView(SingleTableMixin, FilterView):
         context['filter'] = ProgramacionFilter(self.request.GET, queryset=self.get_queryset())
         return context
 
-def export_pdf(request):
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="programacion.pdf"'
+def export_excel(request):
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="programacion.xlsx"'
 
     # Aplicar los mismos filtros de la vista ProgramacionListView
     filter = ProgramacionFilter(request.GET, queryset=Programacion.objects.all())
     programaciones = filter.qs
 
+    # Crear un libro de trabajo y una hoja de trabajo
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Programacion Menu Usuarios"
+
+    # Definir el título del documento
+    worksheet.merge_cells('A1:G1')
+    title_cell = worksheet.cell(row=1, column=1)
+    title_cell.value = "Programacion Menu Usuarios"
+    title_cell.font = Font(size=20, bold=True)
+    title_cell.alignment = Alignment(horizontal="center")
+
+    # Definir los encabezados de la tabla
+    headers = ['Usuario','Rut', 'Nombre Menu', 'Fecha Servicio', 'Cantidad Almuerzo','Opciones Menu','Fecha Selección']
+    for col_num, header in enumerate(headers, 1):
+        cell = worksheet.cell(row=2, column=col_num)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Añadir los datos de las programaciones
+    for row_num, prog in enumerate(programaciones, 3):
+        worksheet.cell(row=row_num, column=1).value = str(prog.usuario)
+        worksheet.cell(row=row_num, column=2).value = str(prog.usuario.rut)
+        worksheet.cell(row=row_num, column=3).value = prog.nom_menu
+        worksheet.cell(row=row_num, column=4).value = prog.fecha_servicio.strftime('%Y-%m-%d')
+        worksheet.cell(row=row_num, column=5).value = prog.cantidad_almuerzo
+        worksheet.cell(row=row_num, column=6).value = prog._syncing
+        worksheet.cell(row=row_num, column=7).value = prog.fecha_seleccion.strftime('%Y-%m-%d') if prog.fecha_seleccion else ''
+
+    # Ajustar el ancho de las columnas
+    for col_num, column in enumerate(worksheet.columns, 1):
+        max_length = 0
+        column = [cell for cell in column]
+        for cell in column:
+            if isinstance(cell, openpyxl.cell.cell.Cell):  # Verificar si la celda es del tipo correcto
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+        adjusted_width = (max_length + 2)
+        column_letter = get_column_letter(col_num)
+        worksheet.column_dimensions[column_letter].width = adjusted_width
+
+    # Guardar el archivo Excel en un buffer
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+    workbook.save(buffer)
+    buffer.seek(0)
 
-    elements = []
-
-    styles = getSampleStyleSheet()
-    title = Paragraph("Programacion Menu Usuarios", styles['Title'])
-    elements.append(title)
-
-    data = [
-        ['Usuario', 'Nombre Menu', 'Fecha Servicio', 'Cantidad Almuerzo', 'Impreso', 'Fecha Impreso', 'Fecha Selección']
-    ]
-
-    for prog in programaciones:
-        data.append([
-            str(prog.usuario),
-            prog.nom_menu,
-            prog.fecha_servicio.strftime('%Y-%m-%d'),
-            prog.cantidad_almuerzo,
-            'Sí' if prog.impreso else 'No',
-            prog.fecha_impreso.strftime('%Y-%m-%d %H:%M') if prog.fecha_impreso else '',
-            prog.fecha_seleccion.strftime('%Y-%m-%d %H:%M') if prog.fecha_seleccion else '',
-        ])
-
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 14),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
-
-    elements.append(table)
-    doc.build(elements)
-
-    pdf = buffer.getvalue()
+    # Escribir el contenido del buffer en la respuesta HTTP
+    response.write(buffer.getvalue())
     buffer.close()
-    response.write(pdf)
+
     return response

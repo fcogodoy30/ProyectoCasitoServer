@@ -63,6 +63,10 @@ footer {
     margin-top: 0;
 }
 
+.navbar-toggler-icon {
+    background-color: #ffffff; /* Cambiar el color de las barras aquí */
+}
+
 .custom-alert {
     max-width: 250px;
     padding: 0;
@@ -115,4 +119,5 @@ footer {
         100% { transform: rotate(360deg); }
     } 
 
+    
 

@@ -1,9 +1,14 @@
 function updateTime() {
-    const timeElement = document.getElementById('time');
-    const now = new Date();
-    const timeString = now.toLocaleTimeString();
-    const dateString = now.toLocaleDateString();
-    timeElement.innerText = `Fecha y hora: ${dateString} ${timeString}`;
+  const timeElement = document.getElementById('time');
+  const now = new Date();
+  
+  // Formatear la hora y los minutos sin los segundos
+  const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Formatear la fecha
+  const dateString = now.toLocaleDateString();
+  
+  timeElement.innerText = `Fecha: ${dateString}  Hora: ${timeString}`;
 }
 
 // Llamar a la función cada segundo para actualizar la hora

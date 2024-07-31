@@ -16,7 +16,19 @@ from django.contrib.auth.decorators import login_required
 import json
 import pytz
 
+from django.contrib.auth.decorators import user_passes_test
 
+def check_user_profiles(user, allowed_profiles):
+    return user.is_authenticated and user.usuarios.tipo_usuario.tipo in allowed_profiles
+
+def check_soporte_or_admin(user):
+    return check_user_profiles(user, ['Soporte', 'Empresa'])
+
+def check_soporte(user):
+    return check_user_profiles(user, ['Soporte'])
+
+def check_admin(user):
+    return check_user_profiles(user, ['Empresa'])
 
 
 #login
@@ -63,7 +75,9 @@ def iniciosession(request):
         return render(request,'login/login.html')
     else:
         user = authenticate(request, username=request.POST['username'] , password=request.POST['password'])
-        if user is None:        
+            
+        if user is None:
+              
             return render(request,'login/login.html',{
                           'error': 'Rut o Contraseña incorrecto'})
         else:
@@ -93,6 +107,7 @@ def iniciosession(request):
 
 #Editar Usuarios
 @login_required
+@user_passes_test(check_soporte_or_admin)
 def editusuario(request, id):
     if request.method == 'GET':
         #consulta = request.GET.get('q')
@@ -145,6 +160,7 @@ def editusuario(request, id):
 
 # Dentro tenemos el guardado del Usuario
 @login_required
+@user_passes_test(check_soporte_or_admin)
 def usuarios(request):
     if request.method == 'GET':
         return redirect('usuarioslistas')
@@ -180,6 +196,7 @@ def usuarios(request):
 
 # lista de usuarios
 @login_required
+@user_passes_test(check_soporte_or_admin)
 def usuarioslistas(request):
     #consulta = request.GET.get('q')
         # Guardamos el Perfil que esta solicitando el dato
@@ -203,6 +220,7 @@ def usuarioslistas(request):
 
 #EDITAR MENU
 @login_required
+@user_passes_test(check_soporte)
 def editamenu(request, id):
     if request.method == 'GET':
         #consulta = request.GET.get('q')
@@ -238,6 +256,7 @@ def editamenu(request, id):
         
 #AGREGAR MENU
 @login_required
+@user_passes_test(check_soporte)
 def agregarmenu(request):
     if request.method == 'GET':
         return redirect('menu_lista')
@@ -269,6 +288,7 @@ def agregarmenu(request):
 
 #ELIMINAR MENU
 @login_required
+@user_passes_test(check_soporte)
 def eliminarMenu(request, id):
     menu = get_object_or_404(CasinoColacion, id=id)
         
@@ -283,6 +303,7 @@ def eliminarMenu(request, id):
         
 #LISTA DEL MENU    
 @login_required
+@user_passes_test(check_soporte)
 def menu_lista(request):
     #consulta = request.GET.get('q')
     #if consulta:
@@ -367,8 +388,10 @@ def programarmenu(request):
         programacion_dict = defaultdict(list)
         for registro in programacion:
             programacion_dict[registro.fecha_servicio].append(registro)
+            
         # Ordenar la programación por fecha
         programacion_ordenada = sorted(programacion_dict.items())
+        
         TipoUsuario = Usuarios.objects.get(id_user=user_id)
         
         if TipoUsuario.tipo_usuario_id == 1:
@@ -389,7 +412,8 @@ def guardar_selecciones(request):
             now = timezone.now()
             santiago_tz = pytz.timezone('America/Santiago')
             now_santiago = now.astimezone(santiago_tz)
-           
+
+                        
             Programacion.objects.create(
                 usuario=usuario,
                 menu_id=casino_colacion.id,
@@ -398,7 +422,8 @@ def guardar_selecciones(request):
                 cantidad_almuerzo=cantidad,
                 fecha_seleccion=now_santiago,
                 impreso=0,
-                _syncing = casino_colacion.id_opciones.id
+                origen = 'nube',
+                _syncing=casino_colacion.id_opciones.id #Ocuparemos la variable para tener el ID de Opcion menu
             )
             
             
@@ -406,7 +431,8 @@ def guardar_selecciones(request):
     return JsonResponse({'status': 'fail'}, status=400)
 
 #control y descarga
-
+@login_required
+@user_passes_test(check_soporte_or_admin)
 def control_descarga(request):
     return render(request, 'admin/control_descarga.html')
 
@@ -435,6 +461,8 @@ class ProgramacionListView(SingleTableMixin, FilterView):
         context['filter'] = ProgramacionFilter(self.request.GET, queryset=self.get_queryset())
         return context
 
+@login_required
+@user_passes_test(check_soporte_or_admin)
 def export_excel(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="programacion.xlsx"'
